@@ -44,9 +44,12 @@ extension CKRecordRecoverable {
             case .data:
                 recordValue = record.value(forKey: prop.name) as? Data
             default:
+                recordValue = nil
                 print("Other types will be supported in the future.")
             }
-            o.setValue(recordValue, forKey: prop.name)
+            if recordValue != nil {
+                o.setValue(recordValue, forKey: prop.name)
+            }
         }
         return o
     }
