@@ -11,6 +11,7 @@ import CloudKit
 
 public extension Notification.Name {
     public static let databaseDidChangeRemotely = Notification.Name(rawValue: "databaseDidChangeRemotely")
+    public static let databaseDidFetchComplete = Notification.Name(rawValue: "databaseDidFetchComplete")
 }
 
 public struct IceCreamConstants {
@@ -46,6 +47,7 @@ public final class SyncEngine<T: Object & CKRecordConvertible & CKRecordRecovera
                 /// So I suggests fetch changes in database everytime app launches.
                 `self`.fetchChangesInDatabase({
                     print("First sync done!")
+                    NotificationCenter.default.post(name: .databaseDidFetchComplete, object: self)
                 })
                 
                 `self`.resumeLongLivedOperationIfPossible()
@@ -377,9 +379,12 @@ extension SyncEngine {
     }
     
     fileprivate func startObservingRemoteChanges() {
-        NotificationCenter.default.addObserver(forName: .databaseDidChangeRemotely, object: nil, queue: OperationQueue.main, using: { [weak self](_) in
+        let center = NotificationCenter.default
+        center.addObserver(forName: .databaseDidChangeRemotely, object: nil, queue: OperationQueue.main, using: { [weak self](_) in
             guard let `self` = self else { return }
-            `self`.fetchChangesInDatabase()
+            `self`.fetchChangesInDatabase() {
+                center.post(name: .databaseDidFetchComplete, object: self)
+            }
         })
     }
     
